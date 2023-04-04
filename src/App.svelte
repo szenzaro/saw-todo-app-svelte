@@ -1,6 +1,7 @@
 <script lang="ts">
   import TodoItem from "./lib/TodoItem.svelte";
   import { todos } from "./todoStore";
+  todos.getTodos();
   let text = "";
   const onKeyup = (e: KeyboardEvent) => {
     if (e.key === "Enter" && text.trim() !== "") {

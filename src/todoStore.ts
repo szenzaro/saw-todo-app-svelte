@@ -7,25 +7,74 @@ export interface Todo {
     text: string;
 }
 
-function createTodoStore() {
-    const { subscribe, set, update } = writable<Todo[]>([
-        { id: '1', text: 'git add .', state: 'done' },
-        { id: '2', text: 'git commit', state: 'done' },
-        { id: '3', text: 'git push', state: 'ongoing' },
-        { id: '4', text: 'escape building', state: 'ongoing' },
-    ]);
+const apiPath = 'http://localhost:1234/api/v1'
 
-    const addTodo = (text: string) => {
-        const todo: Todo = {
+interface TodoRequest {
+    text: string;
+    state: 'done' | 'ongoing';
+}
+
+interface TodosResponse {
+    links: {
+        self: string,
+    },
+    metadata: {
+        timestamp: string,
+        count: number,
+    },
+    data: Todo[];
+}
+
+function createTodoStore() {
+    const { subscribe, set, update } = writable<Todo[]>([]);
+
+    const getTodos = async () => {
+        const res = await fetch(`${apiPath}/todos`);
+        const todoRes: TodosResponse = await res.json();
+
+        set(todoRes.data);
+    }
+
+    const addTodo = async (text: string) => {
+        const todoRequest: TodoRequest = {
             text,
-            id: uuid(),
             state: 'ongoing',
         };
-        update(ts => [...ts, todo]);
+        const res = await fetch(`${apiPath}/todos`, {
+            method: 'POST',
+            body: JSON.stringify(todoRequest),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        if (res.ok) {
+            const todo = await res.json();
+            update(ts => [...ts, todo]);
+        }
     }
-    const updateTodo = (t: Todo) => update(ts => ts.map(v => v.id === t.id ? t : v));
-    const deleteTodo = (id: string) => update(ts => ts.filter(t => id !== t.id));
-    
+    const updateTodo = async (t: Todo) => {
+        const { id, ...tr } = t;
+        const res = await fetch(`${apiPath}/todos/${t.id}`, {
+            method: 'PUT',
+            body: JSON.stringify(tr),
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        if (res.ok) {
+            const resData = await res.json();
+            update(ts => ts.map(v => v.id === t.id ? resData.data : v));
+        }
+    }
+    const deleteTodo = async (id: string) => {
+        const res = await fetch(`${apiPath}/todos/${id}`, {
+            method: 'DELETE',
+        })
+        if (res.ok) {
+            update(ts => ts.filter(t => id !== t.id));
+        }
+    }
+
     return {
         subscribe,
         set,
@@ -33,6 +82,7 @@ function createTodoStore() {
         addTodo,
         updateTodo,
         deleteTodo,
+        getTodos,
     }
 }
 

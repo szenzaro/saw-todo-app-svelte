@@ -9,12 +9,12 @@ export interface Todo {
 
 const apiPath = 'http://localhost:1234/api/v1'
 
-interface TodoRequest {
+export interface TodoRequest {
     text: string;
     state: 'done' | 'ongoing';
 }
 
-interface TodosResponse {
+export interface TodosResponse {
     links: {
         self: string,
     },

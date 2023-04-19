@@ -1,7 +1,9 @@
 <script lang="ts">
     import TodoItem from "./lib/TodoItem.svelte";
     import { userStore } from "./loginStore";
-    import { todos } from "./todoStore";
+    // import { todos } from "./todoStore";
+    import { todos } from './dbStore';
+    
     todos.getTodos();
     let text = "";
     const onKeyup = (e: KeyboardEvent) => {

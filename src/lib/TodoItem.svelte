@@ -1,11 +1,12 @@
 <script lang="ts">
     import type { Todo } from "../todoStore";
-    import { todos } from "../todoStore";
+    // import { todos } from "../todoStore";
+    import { todos } from "../dbStore";
 
     export let todo: Todo;
     let editing = false;
     let input: HTMLInputElement;
-    
+
     const onKeyup = (e: KeyboardEvent) => {
         const text = input.value;
         if (e.key === "Enter" && text.trim() !== "") {
@@ -21,7 +22,7 @@
 
 <div class="todo-item">
     {#if editing}
-        <input type="text" on:keyup={onKeyup} bind:this={input} />
+        <input type="text" on:keyup={onKeyup} bind:this={input} value={todo.text}/>
     {:else}
         <div>
             <input
@@ -36,7 +37,6 @@
             <span
                 on:dblclick={() => {
                     editing = true;
-                    text = todo.text;
                 }}
                 class:done={todo.state === "done"}
                 >{todo.text}

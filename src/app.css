@@ -60,3 +60,12 @@ input {
   justify-content: end;
   font-size: 10px;
 }
+
+.user-info {
+  display: flex;
+  margin-right: 4px;
+}
+
+.user-info button {
+  align-self: center;
+}

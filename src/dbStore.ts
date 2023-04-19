@@ -1,9 +1,11 @@
 import { app } from "./firebaseConf";
-import { addDoc, collection, deleteDoc, doc, getDocs, getFirestore, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, initializeFirestore, onSnapshot, orderBy, persistentLocalCache, persistentMultipleTabManager, query, updateDoc } from 'firebase/firestore';
 import type { Todo, TodoRequest } from "./todoStore";
 import { writable } from "svelte/store";
 
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+});
 
 function createFirebaseStore() {
     const { subscribe, set, update } = writable<Todo[]>([]);

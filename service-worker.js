@@ -40,18 +40,31 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     console.log('fetching', event.request.url)
 
+    // self.clients.matchAll().then(clients => {
+    //     clients.forEach(client => {
+    //         console.log('posting message')
+    //         client.postMessage(
+    //             JSON.stringify({
+    //                 type: 'notification test',
+    //                 data: event.request.url,
+    //             })
+    //         );
+    //     });
+    // });
+
     if (event.request.url.includes('/api/v1/todos')) {
         // response to API requests, Cache Update Refresh strategy
         event.respondWith(caches.match(event.request));
         event.waitUntil(updateCache(event.request).then(notifyClients));
-    }
+    } else {
 
-    // Cache-First Strategy
-    event.respondWith(
-        caches
-            .match(event.request) // check if the request has already been cached
-            .then(cached => cached || fetch(event.request)) // otherwise request network
-    );
+        // Cache-First Strategy
+        event.respondWith(
+            caches
+                .match(event.request) // check if the request has already been cached
+                .then(cached => cached || fetch(event.request)) // otherwise request network
+        );
+    }
 });
 
 function updateCache(request) {

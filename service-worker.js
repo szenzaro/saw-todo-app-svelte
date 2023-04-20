@@ -1,4 +1,4 @@
-const CACHE_NAME = 'SAW-Cache';
+const CACHE_NAME = 'SAW-Cache-v1';
 const STATIC_CACHE_URLS = [
     '/',
     'index.html',
@@ -28,10 +28,24 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
     console.log('Service Worker activating.');
+    // Clear obsolete caches
+    event.waitUntil(
+        caches
+            .keys()
+            .then(keys => keys.filter(key => key !== CACHE_NAME))
+            .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+    );
 });
 
 self.addEventListener('fetch', event => {
     console.log('fetching', event.request.url)
+
+    if (event.request.url.includes('/api/v1/todos')) {
+        // response to API requests, Cache Update Refresh strategy
+        event.respondWith(caches.match(event.request));
+        event.waitUntil(updateCache(event.request).then(notifyClients));
+    }
+
     // Cache-First Strategy
     event.respondWith(
         caches
@@ -39,3 +53,30 @@ self.addEventListener('fetch', event => {
             .then(cached => cached || fetch(event.request)) // otherwise request network
     );
 });
+
+function updateCache(request) {
+    return fetch(request.url).then(
+        response =>
+            cache(request, response) // we can put response in cache
+                .then(() => response) // resolve promise with the Response object
+    );
+}
+
+function notifyClients(response) {
+    return response
+        .json()
+        .then(resp => {
+            self.clients.matchAll().then(clients => {
+                clients.forEach(client => {
+                    // report and send new data to client
+                    client.postMessage(
+                        JSON.stringify({
+                            type: response.url,
+                            data: resp.data
+                        })
+                    );
+                });
+            });
+            return resp.data;
+        });
+}

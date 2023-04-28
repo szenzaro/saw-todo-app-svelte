@@ -70,7 +70,8 @@ self.addEventListener('fetch', event => {
 function updateCache(request) {
     return fetch(request.url).then(
         response =>
-            cache(request, response) // we can put response in cache
+            caches.open(CACHE_NAME)
+                .then(cache => cache.put(request, response.clone())) // we can put response in cache
                 .then(() => response) // resolve promise with the Response object
     );
 }
